@@ -1,0 +1,5 @@
+numpy>=1.13.0,<=1.13.3
+distro>=1.2.0
+opencv-python
+opencv-contrib-python
+annoy
