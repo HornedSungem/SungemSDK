@@ -20,6 +20,5 @@ while True:
 	result = net.run(img)
 	key = cv2.waitKey(5)
 	prob = net.record(result, key, saveFilename='../misc/record.dat')
-	print(prob)
 	cv2.imshow("Scene Recorder", result[0])
 	cv2.waitKey(1)

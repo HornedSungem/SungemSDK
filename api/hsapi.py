@@ -394,7 +394,7 @@ class HS:
 			self.graph = self.device.AllocateGraph(self.graph_byte, scale, -mean)
 			self.msg('Model allocated to device')
 		except:
-			print('Error: Failed to allocate graph to device, please try to re-plug the device')
+			print('Error: Failed to allocate graph to device, please re-plug the device')
 			quit()
 		self.msg('','=')
 		
@@ -522,6 +522,8 @@ class HS:
 		global annoy
 		import annoy # For approximate nearest neighbour processing
 		
+		self.msg('Please enter 1-5')
+		self.msg('to record')
 		
 		
 		self.activated = False
