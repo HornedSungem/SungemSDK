@@ -418,7 +418,7 @@ class HS:
 		for k,v in kwargs.items(): 
 			exec('self.'+k+'=v')
 			
-		if self.type is 1 : # Classification
+		if self.type in [1,7] : # Classification
 			output = numpy.argmax(output)
 		elif self.type is 2: # SSD Face
 			output = self.getBoundingBoxFromSSDResult(output, self.imgSize)
@@ -438,7 +438,7 @@ class HS:
 		return [image,output]
 			
 	def getParam(self,modelName):
-		# Model filename, scale, mean, net input is gray?, image size, result type
+		# Model filename, scale, mean, net input is gray?, image size, graph ID
 		if modelName is 'mnist':
 			return ['graph_mnist', 0.007843, 1.0, True, (28,28), 1]
 		elif modelName is 'FaceDetector':
@@ -451,6 +451,8 @@ class HS:
 			return ['graph_fn', 0.007843, 1.0, False, (160,160), 5]
 		elif modelName is 'SketchGuess':
 			return ['graph_sg', 0.007843, 1.0, False, (28,28), 6]
+		elif modelName is 'OCR':
+			return ['graph_ocr',  0.0078125, 1.0, False, (40,40), 7]
 		else:
 			self.msg('Using user\'s graph file')
 			return None 
