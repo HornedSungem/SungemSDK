@@ -367,8 +367,8 @@ class HS:
 		
 		if model_param is not None:
 			self.graphPath = self.graphFolder + model_param[0]
-			scale = model_param[1]
-			mean = model_param[2]
+			self.scale = model_param[1]
+			self.mean = model_param[2]
 			self.isGray = model_param[3]
 			self.netSize = model_param[4]
 			self.type = model_param[5]
@@ -391,7 +391,7 @@ class HS:
 			quit()
 		
 		try:
-			self.graph = self.device.AllocateGraph(self.graph_byte, scale, -mean)
+			self.graph = self.device.AllocateGraph(self.graph_byte, self.scale, -self.mean)
 			self.msg('Model allocated to device')
 		except:
 			print('Error: Failed to allocate graph to device, please re-plug the device')
@@ -439,6 +439,7 @@ class HS:
 			
 	def getParam(self,modelName):
 		# Model filename, scale, mean, net input is gray?, image size, graph ID
+		self.msg('Graph:' + modelName)
 		if modelName is 'mnist':
 			return ['graph_mnist', 0.007843, 1.0, True, (28,28), 1]
 		elif modelName is 'FaceDetector':
@@ -453,6 +454,8 @@ class HS:
 			return ['graph_sg', 0.007843, 1.0, False, (28,28), 6]
 		elif modelName is 'OCR':
 			return ['graph_ocr',  0.0078125, 1.0, False, (40,40), 7]
+		elif modelName is 'squeeze':
+			return ['graph_sz',  1, 110.5, False, (227,227), 8]
 		else:
 			self.msg('Using user\'s graph file')
 			return None 
@@ -524,21 +527,21 @@ class HS:
 		global annoy
 		import annoy # For approximate nearest neighbour processing
 		
-		self.msg('Please enter 1-5')
+		self.msg('Please enter 1-%d' % self.numBin)
 		self.msg('to record')
-		
 		
 		self.activated = False
 		self.featBinLength = []
 		if not hasattr(self, 'featBin'):
+			self.numBin = 5
 			self.featBin = {}
-			self.featBin = {x:{} for x in ['1','2','3','4','5']}
-			for n in range(1,6):
+			self.featBin = {str(x):{} for x in range(1,self.numBin+1)}
+			for n in range(1,self.numBin+1):
 				self.featBin[str(n)]['feats'] = []
 				self.featBinLength.append(0)
 		# Load from file
 		else:
-			for n in range(1,6):
+			for n in range(1,self.numBin+1):
 				featLen = len(self.featBin[str(n)]['feats'])
 				self.featBinLength.append(featLen)
 				if (featLen > 0):
@@ -555,6 +558,7 @@ class HS:
 		
 		for k,v in kwargs.items(): 
 			exec('self.'+k+'=v')
+			
 		
 		if not hasattr(self, 'featBin'):
 			self.featDim = result[1].shape[0]
@@ -565,8 +569,8 @@ class HS:
 				return self.runANN(result[1])
 			return None
 		key = chr(key)
-			
-		if key in ['1','2','3','4','5']:
+		
+		if key.isdigit() and int(key) in range(1,self.numBin+1):
 			self.msg('Record to bin: ' + key)
 			if key in self.featBin:
 				self.featBin[key]['feats'].append(result[1])
@@ -585,7 +589,7 @@ class HS:
 			
 	def compressFeatBin(self):
 		binList = []
-		for idx in range(5):
+		for idx in range(self.numBin):
 			if self.featBinLength[idx] > 0:
 				binList.append(idx)
 				
@@ -623,7 +627,7 @@ class HS:
 				self.featBin[idx]['feats'] = newList
 				
 			# Update 
-			for n in range(5):
+			for n in range(self.numBin):
 				self.featBinLength[n] = len(self.featBin[str(n+1)]['feats'])
 			self.dispBins()
 			self.msg('Compress finished','-')
@@ -634,7 +638,7 @@ class HS:
 		
 	def buildANN(self):
 		self.binList = []
-		for idx in range(5):
+		for idx in range(self.numBin):
 			if self.featBinLength[idx] > 0:
 				self.binList.append(idx)
 				
@@ -655,7 +659,7 @@ class HS:
 	def runANN(self,feat):
 		self.msg('Running ANN','-')
 		dists = []
-		for n in range(5):
+		for n in range(self.numBin):
 			idx = str(n+1)
 			if 'ann' in self.featBin[idx]:
 				[index, dist] = self.featBin[idx]['ann'].get_nns_by_vector(feat, 1, search_k=-1, include_distances=True)
@@ -665,11 +669,11 @@ class HS:
 		
 		
 		result = self.softmax(numpy.array(dists))
-		for n in range(5):
+		for n in range(self.numBin):
 			self.msg_debug('[%d]: %2.2f' % (n+1, result[n]))
 		
 		self.msg('Probabilities','-')
-		for n in range(5):
+		for n in range(self.numBin):
 			self.msg('%s' % ('|'*int(10*result[n])))
 			
 		return result
@@ -678,7 +682,7 @@ class HS:
 		import pickle
 		with open(self.saveFilename, 'wb') as fp:
 			featList = []
-			for i in range(5):
+			for i in range(self.numBin):
 				featList.append(self.featBin[str(i+1)]['feats'])
 			pickle.dump(featList, fp)
 		self.msg('Save complete','+')
@@ -690,7 +694,9 @@ class HS:
 			import pickle
 			with open(filename, 'rb') as fp:
 				featList = pickle.load(fp)
-			for i in range(5):
+			
+			self.numBin = len(featList)
+			for i in range(self.numBin):
 				self.featBin[str(i+1)]['feats'] = featList[i]
 			self.init_recorder()
 		else:
@@ -701,7 +707,10 @@ class HS:
 		self.msg('Reset!','+')
 		
 	def dispBins(self):
-		self.msg('[%d]-[%d]-[%d]-[%d]-[%d]' % (self.featBinLength[0],self.featBinLength[1],self.featBinLength[2],self.featBinLength[3],self.featBinLength[4]))
+		res = '-'
+		for n in range(self.numBin):
+			res += '[%d]-' % self.featBinLength[n]
+		self.msg(res)
 
 			
 # Util functions	

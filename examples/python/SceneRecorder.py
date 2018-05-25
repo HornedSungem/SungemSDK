@@ -19,6 +19,10 @@ while True:
 	# Get image descriptor
 	result = net.run(img)
 	key = cv2.waitKey(5)
-	prob = net.record(result, key, saveFilename='../misc/record.dat')
+	prob = net.record(result, key, saveFilename='../misc/record.dat', numBin = 5)
+	
+	if prob is not None:
+		cv2.putText(result[0], '%d' % (prob.argmax() + 1), (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0,255,0), 7)
+		cv2.putText(result[0], '%d' % (prob.argmax() + 1), (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0,255,255), 3)
 	cv2.imshow("Scene Recorder", result[0])
 	cv2.waitKey(1)
