@@ -9,7 +9,7 @@ else
 	python3 -m pip install -r ../deps/requirements_linux.txt
 fi
 
-sudo sh install-opencv.sh
+sudo ./install-opencv.sh
 
 sudo cp 99-hornedsungem.rules /etc/udev/rules.d/
 sudo chmod +x /etc/udev/rules.d/99-hornedsungem.rules
