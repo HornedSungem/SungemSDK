@@ -37,7 +37,6 @@ extern "C" {
         HS_DEVICE_NOT_FOUND = -4,
         HS_INVALID_PARAMETERS = -5,
         HS_TIMEOUT = -6,
-        HS_MVCMD_NOT_FOUND = -7,
         HS_NO_DATA = -8,
         HS_GONE = -9,
         HS_UNSUPPORTED_GRAPH_FILE = -10,
@@ -54,6 +53,7 @@ extern "C" {
         HS_DONT_BLOCK = 2,
         HS_TIME_TAKEN = 1000,
         HS_DEBUG_INFO = 1001,
+        HS_GRAPH_ID = 1002,
     } hsGraphOptions;
     
     typedef enum {
@@ -81,10 +81,10 @@ extern "C" {
     hsStatus hsGetGraphOption(void *graphHandle, int option, void *data, unsigned int *dataLength);
     hsStatus hsSetDeviceOption(void *deviceHandle, int option, const void *data, unsigned int dataLength);
     hsStatus hsGetDeviceOption(void *deviceHandle, int option, void *data, unsigned int *dataLength);
-    hsStatus hsLoadTensor(void *graphHandle, const void *inputTensor, unsigned int inputTensorLength, void *userParam);
+    hsStatus hsLoadTensor(void *graphHandle, const void *inputTensor, int id, unsigned int inputTensorLength, void *userParam);
     hsStatus hsGetResult(void *graphHandle, void **outputData, unsigned int *outputDataLength, void **userParam);
     hsStatus hsDeviceGetImage(void *deviceHandle, void **outputData, bool truthy);
-    hsStatus hsGetImage(void *graphHandle, void **outputData,void *userParam,float std_value,float mean_value, bool truthy);
+    hsStatus hsGetImage(void *graphHandle, void **outputData, int id, void *userParam,float std_value,float mean_value, bool truthy);
     
 #ifdef __cplusplus
 }
