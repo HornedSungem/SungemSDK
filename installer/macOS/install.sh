@@ -14,7 +14,7 @@ fi
 #----------------------------------------
 
 brew update
-brew install -y libusb
+brew install libusb
 
 #----------------------------------------
 
